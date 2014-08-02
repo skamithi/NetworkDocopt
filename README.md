@@ -2,7 +2,7 @@ NetworkDocopt is a command line argument parser for networking focused applicati
 
 - Support for specific types of <> variable tags with sanity checking:
     - \<ip\> or \<source-ip\>   : Must enter a valid IPv4 Address
-    - \<ip\/mask\>             : Must enter a valid IPv4 subnet 
+    - \<ip/mask\>             : Must enter a valid IPv4 subnet 
     - \<interface\>           : Must enter a valid "lo, eth0, swp5, etc" interfacae
     - \<name> or \<cleartext\> : Any text will do 
     - \<number\>              : Must enter a number
