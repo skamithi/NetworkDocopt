@@ -32,9 +32,14 @@ class ExampleCLI(NetworkDocopt):
                     if args['<ip>']:
                         print check_output(['ip', 'route', 'get', args['<ip>']])
                     elif args['<ip/mask>']:
-                        print check_output(['ip', 'route', 'get', args['<ip/mask>']])
+                        print check_output(['ip', 'route', 'show', args['<ip/mask>']])
                     else:
                         print check_output(['ip', 'route', 'show'])
+                elif args['interface']:
+                    if args['<interface>']:
+                        print check_output(['ip', 'addr', 'show', args['<interface>']])
+                    else:
+                        print check_output(['ip', 'addr', 'show'])
 
 if __name__ == "__main__":
     print_options = False
