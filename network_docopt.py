@@ -28,20 +28,20 @@ class Token():
             if word.startswith('<'):
 
                 if word == '<ip>' or word == '<source-ip>':
-                    if re_match('\d+\.\d+\.\d+\.\d+', argv_text):
+                    if re_match('^\d+\.\d+\.\d+\.\d+$', argv_text):
                         self.key_text = word
                         self.value = argv_text
                         return True
 
                 elif word == '<ip/mask>':
-                    if re_match('\d+\.\d+\.\d+\.\d+\/\d+', argv_text):
+                    if re_match('^\d+\.\d+\.\d+\.\d+\/\d+$', argv_text):
                         self.key_text = word
                         self.value = argv_text
                         return True
 
                 elif word == '<interface>':
 
-                    if re_match('\w+\d+', argv_text):
+                    if re_match('^\w+\d+$', argv_text):
                         self.key_text = word
                         self.value = argv_text
                         return True
