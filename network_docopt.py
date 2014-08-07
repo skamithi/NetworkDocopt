@@ -15,6 +15,9 @@ class Token():
         self.value = False
 
     def __str__(self):
+        if self.required:
+            return '*' + self.text
+
         return self.text
 
     def matches(self, argv_text):
@@ -90,10 +93,15 @@ class CommandSequence():
         tmp_tokens = self.text.split(' ')[1:]
         self.text = ' '.join(tmp_tokens)
 
+        self.text = self.text.replace(' |', '|')
+        self.text = self.text.replace('| ', '|')
+        self.text = self.text.replace(' ]', ']')
+        self.text = self.text.replace('[ ', '[')
+
         # Now that we know each word is separated by a single whitespace split
         # on whitespace. Ignore the first token which is the program name.
         self.tokens = []
-        for x in tmp_tokens:
+        for x in self.text.split(' '):
 
             if x.startswith('('):
 
@@ -114,6 +122,14 @@ class CommandSequence():
                 token = Token(x, True)
 
             self.tokens.append(token)
+
+    def __str__(self):
+        text = []
+        index = 0
+        for token in self.tokens:
+            text.append('%d: %s' % (index, token))
+            index += 1
+        return '\n'.join(text)
 
     def argv_matches_tokens(self, argv):
         len_argv = len(argv)
@@ -168,6 +184,7 @@ class NetworkDocopt():
         self.options = []
         self.program = None
         self.closest_matches = []
+        self.docstring = docstring
 
         # Parse the 'Usage' section of the doc string.  Create a
         # CommandSequence object for every line in Usage, store those
@@ -193,6 +210,13 @@ class NetworkDocopt():
                     if result:
                         self.program = result.group(1)
 
+        if debug:
+            for cmd in self.commands:
+                print 'CMD TEXT: %s' % cmd.text
+                print 'CMD TOKENS'
+                print cmd
+                print ''
+
         # Now loop over all of the CommandSequence objects and build a list
         # of every kind of token in the doc string
         self.all_tokens = []
@@ -201,7 +225,7 @@ class NetworkDocopt():
                 self.all_tokens += token.words
         self.all_tokens = set(self.all_tokens)
 
-        # The 1st item in argv is prcli...ignore it
+        # The 1st item in argv is the program name...ignore it
         self.argv = argv[1:]
 
         # Init all tokens in args to False
@@ -260,6 +284,12 @@ class NetworkDocopt():
 
             if cmd.option:
                 self.options = cmd.option
+
+            if len(cmd.tokens) == 1:
+                token = cmd.tokens[0]
+                if token.key_text == '-h' or token.key_text == '--help':
+                    print self.docstring
+                    exit(0)
 
         else:
             print "\nERROR: ambiguous parse chain\n"
