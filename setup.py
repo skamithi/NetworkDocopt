@@ -14,7 +14,7 @@ DistUtilsExtra.auto.setup(
     author='Daniel Walton',
     author_email='dwalton@cumulusnetworks.com',
     scripts=['bin/network-docopt-example'],
-    packages=['network_docopt'],
+    provides=('network_docopt'),
     data_files=[('/usr/share/bash-completion/completions',
                  ['completions/network-docopt-example'])]
 )
