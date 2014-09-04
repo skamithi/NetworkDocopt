@@ -11,10 +11,13 @@ NetworkDocopt is a command line argument parser for networking focused applicati
 
 - Support for integration into bash's auto-complete mechanism
 
+- To install run `python setup.py`
 
 Example
 - See network-docopt-example for an example of how to use this module
 - For bash \<tab\> auto-completion and bash \<tab\>\<tab\> "show me available options" you must create a small bash script in /usr/share/bash-completion/completions/ like so:
 - cp completions/network-docopt-example /usr/share/bash-completion/completions/
 
-This bash script will call example.py with 'options' as the last arguement. For instance if you type "example.py show ip <tab><tab>" the bash script will call "example.py show ip options" which will return "route" and "interface". This tells bash what the next options are.
+This bash script will call network-docopt-example with 'options' as the last argument. For instance if you type "network-docopt-example show ip <tab><tab>" the bash script will call "network-docopt-example show ip options" which will return "route" and "interface". This tells bash what the next options are.
+
+
