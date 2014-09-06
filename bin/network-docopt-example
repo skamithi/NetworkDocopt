@@ -2,8 +2,8 @@
 
 """
 Usage:
-    example.py show ip route [<ip>|<ip/mask>] 
-    example.py show ip interface [<interface>] 
+    network-docopt-example show ip route [<ip>|<ip/mask>]
+    network-docopt-example show ip interface [<interface>]
 
 Help:
     -h --help     Show this screen
