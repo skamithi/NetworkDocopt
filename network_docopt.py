@@ -1,7 +1,7 @@
 
 from ipaddr import IPv4Address, IPv4Network, IPv6Address, IPv6Network
 from re import match as re_match, search as re_search
-from sys import argv
+import sys
 
 debug = False
 
@@ -163,6 +163,8 @@ class CommandSequence():
                 if token.matches(text_argv):
                     argv_index += 1
                     self.score += 1
+                else:
+                    self.option = token.text.split('|')
 
         if self.score != len_argv:
             if debug:
@@ -226,7 +228,7 @@ class NetworkDocopt():
         self.all_tokens = set(self.all_tokens)
 
         # The 1st item in argv is the program name...ignore it
-        self.argv = argv[1:]
+        self.argv = sys.argv[1:]
 
         # Init all tokens in args to False
         for x in self.all_tokens:
@@ -239,6 +241,9 @@ class NetworkDocopt():
 
         # This is a bad thing
         if not candidates:
+
+            if debug:
+                print "There are no candidates"
 
             high_score = -1
             scores = {}
@@ -275,6 +280,9 @@ class NetworkDocopt():
         elif len(candidates) == 1:
             cmd = candidates[0]
 
+            if debug:
+                print "There is one candidate, options %s"  % cmd.option
+
             for token in cmd.tokens:
                 self.args[token.key_text] = token.value
                 if debug:
@@ -297,9 +305,3 @@ class NetworkDocopt():
     def print_options(self):
         if self.options:
             print '\n'.join(self.options)
-            with open("/var/log/dwalton.log", "a") as myfile:
-                myfile.write(' '.join(self.argv))
-                myfile.write('\n')
-                myfile.write('\n'.join(self.options))
-                myfile.write('\n')
-                myfile.write('\n')
