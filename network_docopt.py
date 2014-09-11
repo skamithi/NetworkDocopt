@@ -1,6 +1,7 @@
 
 from ipaddr import IPv4Address, IPv4Network, IPv6Address, IPv6Network
 from re import match as re_match, search as re_search
+from os import listdir
 import sys
 
 debug = False
@@ -19,6 +20,23 @@ class Token():
             return '*' + self.text
 
         return self.text
+
+    def options(self):
+        results = []
+
+        for word in self.words:
+            if word.startswith('<'):
+
+                if word == '<interface>':
+                    results.extend([x for x in listdir('/sys/class/net/') if x != 'bonding_masters'])
+                else:
+                    results.append(word)
+
+            # Keyword
+            else:
+                results.append(word)
+
+        return results
 
     def matches(self, argv_text):
 
@@ -44,12 +62,7 @@ class Token():
 
                 elif word == '<interface>':
 
-                    if re_match('^\w+\d+$', argv_text):
-                        self.key_text = word
-                        self.value = argv_text
-                        return True
-
-                    if argv_text == 'lo':
+                    if argv_text in listdir('/sys/class/net/'):
                         self.key_text = word
                         self.value = argv_text
                         return True
@@ -160,7 +173,7 @@ class CommandSequence():
                     if not argv_index:
                         self.score -= 1
 
-                    self.option.extend(token.text.split('|'))
+                    self.option.extend(token.options())
                     if debug:
                         print "%-70s: Required token '%s' failed to match vs. argv[%d] '%s'. SCORE: %d" % \
                             (self.text, token.text, argv_index, text_argv, self.score)
@@ -172,7 +185,7 @@ class CommandSequence():
                     self.score += 1
                     self.option = []
                 else:
-                    self.option.extend(token.text.split('|'))
+                    self.option.extend(token.options())
 
         if self.score != len_argv:
             if debug:
