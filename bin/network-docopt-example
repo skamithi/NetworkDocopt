@@ -4,6 +4,7 @@
 Usage:
     network-docopt-example show ip route [<ip>|<ip/mask>]
     network-docopt-example show ip interface [<interface>]
+    network-docopt-example (-h|--help)
 
 Help:
     -h --help     Show this screen

@@ -82,7 +82,7 @@ class Token():
 class CommandSequence():
     def __init__(self, string):
 
-        self.option = None
+        self.option = []
         self.score = 0
 
         # Remove leading and trailing whitespaces
@@ -97,6 +97,9 @@ class CommandSequence():
         self.text = self.text.replace('| ', '|')
         self.text = self.text.replace(' ]', ']')
         self.text = self.text.replace('[ ', '[')
+
+        assert self.text.count('[') == self.text.count(']'), 'You have mis-matched []s in:\n  %s\n' % self.text
+        assert self.text.count('(') == self.text.count(')'), 'You have mis-matched ()s in:\n  %s\n' % self.text
 
         # Now that we know each word is separated by a single whitespace split
         # on whitespace. Ignore the first token which is the program name.
@@ -136,7 +139,7 @@ class CommandSequence():
 
         if len_argv > len(self.tokens):
             if debug:
-                print "%-70s: %d argv words but we only have %d tokens" % (self.text, len_argv, len(self.tokens))
+                print "%-70s: %d argv words but we only have %d tokens. SCORE: 0" % (self.text, len_argv, len(self.tokens))
             return False
 
         argv_index = 0
@@ -148,27 +151,32 @@ class CommandSequence():
 
             if token.required:
 
-                if not token.matches(text_argv):
+                if token.matches(text_argv):
+                    argv_index += 1
+                    self.score += 1
+                    self.option = []
+
+                else:
                     if not argv_index:
                         self.score -= 1
 
-                    self.option = token.text.split('|')
+                    self.option.extend(token.text.split('|'))
                     if debug:
-                        print "%-70s: Required token '%s' failed to match vs. argv[%d] '%s'" % (self.text, token.text, argv_index, text_argv)
+                        print "%-70s: Required token '%s' failed to match vs. argv[%d] '%s'. SCORE: %d" % \
+                            (self.text, token.text, argv_index, text_argv, self.score)
                     return False
 
-                argv_index += 1
-                self.score += 1
             else:
                 if token.matches(text_argv):
                     argv_index += 1
                     self.score += 1
+                    self.option = []
                 else:
-                    self.option = token.text.split('|')
+                    self.option.extend(token.text.split('|'))
 
         if self.score != len_argv:
             if debug:
-                print "%-70s: %d/%d argv words matches" % (self.text, self.score, len_argv)
+                print "%-70s: %d/%d argv words matches. SCORE: %d" % (self.text, self.score, len_argv, self.score)
             return False
 
         if debug:
@@ -193,6 +201,7 @@ class NetworkDocopt():
         # objects on the self.commands list.
         state = None
         self.commands = []
+        found_help_option = False
         for line in docstring.split('\n'):
             if line.startswith('Usage'):
                 state = 'Usage'
@@ -205,12 +214,19 @@ class NetworkDocopt():
                 continue
 
             if state == 'Usage':
+                if '--help' in line:
+                    found_help_option = True
                 self.commands.append(CommandSequence(line))
 
                 if self.program is None:
                     result = re_search('^\s+(\S+)', line)
                     if result:
                         self.program = result.group(1)
+
+        # Automagically add a (-h|--help) option
+        if not found_help_option:
+            line = '%s (-h|--help)' % self.program
+            self.commands.append(CommandSequence(line))
 
         if debug:
             for cmd in self.commands:
