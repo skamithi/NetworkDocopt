@@ -1,4 +1,4 @@
-_example()
+_network_docopt_example()
 {
     COMPREPLY=()
     COMP_WORDBREAKS=" "
@@ -13,4 +13,4 @@ _example()
     COMPREPLY=($(compgen -W '${choices}' -- ${cur} ))
     return 0
 }
-complete -F _example example.py 
+complete -F _network_docopt_example network-docopt-example
