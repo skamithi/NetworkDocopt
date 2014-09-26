@@ -1,5 +1,6 @@
 
-from ipaddr import IPv4Address, IPv4Network, IPv6Address, IPv6Network
+from ipaddr import IPAddress, IPv4Address, IPv6Address
+from ipaddr import IPNetwork, IPv4Network, IPv6Network
 from re import match as re_match, search as re_search
 from os import listdir
 import sys
@@ -49,16 +50,22 @@ class Token():
             if word.startswith('<'):
 
                 if word == '<ip>' or word == '<source-ip>':
-                    if re_match('^\d+\.\d+\.\d+\.\d+$', argv_text):
+                    try:
+                        ipv4_or_ipv6 = IPAddress(argv_text)
                         self.key_text = word
                         self.value = argv_text
                         return True
+                    except:
+                        pass
 
                 elif word == '<ip/mask>':
-                    if re_match('^\d+\.\d+\.\d+\.\d+\/\d+$', argv_text):
+                    try:
+                        ipv4_or_ipv6 = IPNetwork(argv_text)
                         self.key_text = word
                         self.value = argv_text
                         return True
+                    except:
+                        pass
 
                 elif word == '<interface>':
 
