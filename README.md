@@ -11,7 +11,8 @@ NetworkDocopt is a command line argument parser for networking focused applicati
 
 - Support for integration into bash's auto-complete mechanism
 
-- To install run `python setup.py`
+- To install run ``python setup.py install ``
+
 
 Example
 - See network-docopt-example for an example of how to use this module
