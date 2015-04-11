@@ -13,7 +13,6 @@ setup(
     install_requires=[
         'ipaddr'
     ],
-    provides=['NetworkDocopt'],
     scripts=['bin/network-docopt-example'],
     data_files=[('/usr/share/bash-completion/completions',
                  ['completions/network-docopt-example'])]
