@@ -14,6 +14,6 @@ setup(
         'ipaddr'
     ],
     scripts=['bin/network-docopt-example'],
-    data_files=[('/usr/share/bash-completion/completions',
+    data_files=[('usr/share/bash-completion/completions',
                  ['completions/network-docopt-example'])]
 )
