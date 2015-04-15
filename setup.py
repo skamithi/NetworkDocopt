@@ -1,7 +1,10 @@
 # pylint: disable=c0111
-import ez_setup
-ez_setup.use_setuptools()
-from setuptools import setup
+try:
+    from setuptools import setup
+except ImportError:
+    import ez_setup
+    ez_setup.use_setuptools()
+    from setuptools import setup
 setup(
     name='network-docopt',
     version='1.0',
