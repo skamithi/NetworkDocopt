@@ -1,2 +1,4 @@
 *.pyc
 *.swp
+deb_dist
+network_docopt.egg-info
