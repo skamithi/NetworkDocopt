@@ -31,6 +31,7 @@ We have not hosted a .deb for this project yet but you can build a .deb via:
 This will place a .deb in the deb_dist directory, just "dpkg -i" to install it.
 Example:
 
+```
 root@cel-redxp-99:~/NetworkDocopt/deb_dist# ls -l *.deb
 -rw-r--r-- 1 root root 5650 May 20 13:57 python-network-docopt_1.0-1_all.deb
 root@cel-redxp-99:~/NetworkDocopt/deb_dist#
@@ -41,3 +42,4 @@ Preparing to replace python-network-docopt 0.1.0-cl3.0 (using python-network-doc
 Unpacking replacement python-network-docopt ...
 Setting up python-network-docopt (1.0-1) ...
 root@cel-redxp-99:~/NetworkDocopt/deb_dist#
+```
