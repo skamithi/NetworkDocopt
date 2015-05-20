@@ -2,3 +2,5 @@
 *.swp
 deb_dist
 network_docopt.egg-info
+build
+dist
