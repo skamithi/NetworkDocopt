@@ -1,5 +1,6 @@
 *.pyc
 *.swp
+setuptools*
 deb_dist
 network_docopt.egg-info
 build
