@@ -26,7 +26,9 @@ Run ``python setup.py install ``
 
 ## Installing via a deb
 We have not hosted a .deb for this project yet but you can build a .deb via:
- python setup.py --command-packages=stdeb.command sdist_dsc bdist_deb
+```
+python setup.py --command-packages=stdeb.command sdist_dsc bdist_deb
+```
 
 This will place a .deb in the deb_dist directory, just "dpkg -i" to install it.
 Example:
