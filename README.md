@@ -22,7 +22,7 @@ This bash script will call network-docopt-example with 'options' as the last arg
 
 # Installing the deb
 We have not hosted a .deb for this project yet but we checked a deb into the repo.
-You can install it via ```dpky -i python-network-docopt_1.0-1_all.deb```
+You can install it via ```dpky -i python-network-docopt_0.1.0-1_all.deb```
 
 # Building a new deb
 You can build a .deb via:
@@ -36,14 +36,14 @@ Example:
 
 ```
 root@cel-redxp-99:~/NetworkDocopt/deb_dist# ls -l *.deb
--rw-r--r-- 1 root root 5650 May 20 13:57 python-network-docopt_1.0-1_all.deb
+-rw-r--r-- 1 root root 5650 May 20 13:57 python-network-docopt_0.1.0-1_all.deb
 root@cel-redxp-99:~/NetworkDocopt/deb_dist#
 root@cel-redxp-99:~/NetworkDocopt/deb_dist#
-root@cel-redxp-99:~/NetworkDocopt/deb_dist# dpkg -i python-network-docopt_1.0-1_all.deb
+root@cel-redxp-99:~/NetworkDocopt/deb_dist# dpkg -i python-network-docopt_0.1.0-1_all.deb
 (Reading database ... 28658 files and directories currently installed.)
-Preparing to replace python-network-docopt 0.1.0-cl3.0 (using python-network-docopt_1.0-1_all.deb) ...
+Preparing to replace python-network-docopt 0.1.0-cl3.0 (using python-network-docopt_0.1.0-1_all.deb) ...
 Unpacking replacement python-network-docopt ...
-Setting up python-network-docopt (1.0-1) ...
+Setting up python-network-docopt (0.1.0-1) ...
 root@cel-redxp-99:~/NetworkDocopt/deb_dist#
 ```
 
