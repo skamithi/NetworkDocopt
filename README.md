@@ -20,8 +20,12 @@ NetworkDocopt is a command line argument parser for networking focused applicati
 
 This bash script will call network-docopt-example with 'options' as the last argument. For instance if you type "network-docopt-example show ip <tab><tab>" the bash script will call "network-docopt-example show ip options" which will return "route" and "interface". This tells bash what the next options are.
 
-# Installation
-We have not hosted a .deb for this project yet but you can build a .deb via:
+# Installing the deb
+We have not hosted a .deb for this project yet but we checked a deb into the repo.
+You can install it via ```dpky -i python-network-docopt_1.0-1_all.deb```
+
+# Building a new deb
+You can build a .deb via:
 ```
 apt-get install python-stdeb python-all build-essential
 python setup.py --command-packages=stdeb.command sdist_dsc bdist_deb
