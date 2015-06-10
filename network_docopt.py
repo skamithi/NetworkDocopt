@@ -17,7 +17,7 @@ class Token():
         self.value = False
 
     def __str__(self):
-        return "REQUIRED: %s, TEXT: %s, WORDS: %s" % (self.required, self.text, self.words)
+        return "REQUIRED: %s, KEY_TEXT: %s, VALUE: %s, WORDS: %s" % (self.required, self.key_text, self.value, self.words)
 
     def options(self):
         results = []
@@ -36,7 +36,7 @@ class Token():
 
         return results
 
-    def matches(self, argv_text):
+    def matches(self, argv_text, all_tokens):
 
         if not argv_text:
             return False
@@ -77,11 +77,19 @@ class Token():
                         self.value = int(argv_text)
                         return True
 
-                # For all other <foo> inputs do not do any sanity checking
+                # For all other <foo> inputs, only do basic sanity checking
                 else:
-                    self.key_text = word
-                    self.value = argv_text
-                    return True
+                    conflicts_with_keyword = False
+
+                    for x in all_tokens:
+                        if x.startswith(argv_text):
+                            conflicts_with_keyword = True
+                            break
+
+                    if not conflicts_with_keyword:
+                        self.key_text = word
+                        self.value = argv_text
+                        return True
 
             # Keyword
             else:
@@ -90,7 +98,7 @@ class Token():
                     self.value = True
                     return True
 
-                elif word.startswith(argv_text):
+                elif argv_text != '-' and argv_text != '--' and word.startswith(argv_text):
                     self.key_text = word
                     self.value = True
                     return True
@@ -147,10 +155,11 @@ class CommandSequence():
     def __str__(self):
         text = []
         index = 0
+
         for token in self.tokens:
             text.append('%d: %s' % (index, token))
             index += 1
-        return '\n'.join(text)
+        return self.text + '\n' +  '\n'.join(text)
 
     def argv_matches_tokens(self, argv):
         len_argv = len(argv)
@@ -169,7 +178,7 @@ class CommandSequence():
 
             if token.required:
 
-                if token.matches(text_argv):
+                if token.matches(text_argv, self.all_tokens):
                     argv_index += 1
                     self.score += 1
                     self.option = []
@@ -185,7 +194,7 @@ class CommandSequence():
                     return False
 
             else:
-                if token.matches(text_argv):
+                if token.matches(text_argv, self.all_tokens):
                     argv_index += 1
                     self.score += 1
                     self.option = []
@@ -262,10 +271,12 @@ class NetworkDocopt():
         # of every kind of token in the doc string
         all_tokens = []
         for cmd in self.commands:
-
             for token in cmd.tokens:
                 all_tokens += token.words
         all_tokens = set(all_tokens)
+
+        for cmd in self.commands:
+            cmd.all_tokens = all_tokens
 
         # The 1st item in argv is the program name...ignore it
         self.argv = sys.argv[1:]
@@ -345,7 +356,10 @@ class NetworkDocopt():
                     exit(0)
 
         else:
-            print "\nERROR: ambiguous parse chain\n"
+            print "\nERROR: ambiguous parse chain...matches:"
+
+            for cmd in candidates:
+                print "%s\n" % cmd
 
     def get(self, keyword):
         return self.args.get(keyword)
