@@ -13,14 +13,11 @@ class Token():
         self.text = text
         self.words = text.split('|')
         self.required = required
-        self.key_text = text
+        self.key_text = None
         self.value = False
 
     def __str__(self):
-        if self.required:
-            return '*' + self.text
-
-        return self.text
+        return "REQUIRED: %s, TEXT: %s, WORDS: %s" % (self.required, self.text, self.words)
 
     def options(self):
         results = []
@@ -74,16 +71,17 @@ class Token():
                         self.value = argv_text
                         return True
 
-                elif word == '<name>' or word == '<cleartext>':
-                    self.key_text = word
-                    self.value = argv_text
-                    return True
-
                 elif word == '<major>' or word == '<minor>' or word == '<number>':
                     if argv_text.isdigit():
                         self.key_text = word
                         self.value = int(argv_text)
                         return True
+
+                # For all other <foo> inputs do not do any sanity checking
+                else:
+                    self.key_text = word
+                    self.value = argv_text
+                    return True
 
             # Keyword
             else:
@@ -208,6 +206,7 @@ Heavily influenced by docopt but designed to be a little more like
 a Networking CLI with partial word acceptance, IPv4 sanity checking, etc
 """
 class NetworkDocopt():
+
     def __init__(self, docstring):
         self.args    = {}
         self.match   = False
@@ -222,14 +221,18 @@ class NetworkDocopt():
         state = None
         self.commands = []
         found_help_option = False
+
         for line in docstring.split('\n'):
             if line.startswith('Usage'):
                 state = 'Usage'
                 continue
+
             elif line.startswith('Help'):
                 break
+
             elif line.startswith('Options'):
                 break
+
             elif line == '':
                 continue
 
@@ -257,18 +260,19 @@ class NetworkDocopt():
 
         # Now loop over all of the CommandSequence objects and build a list
         # of every kind of token in the doc string
-        self.all_tokens = []
+        all_tokens = []
         for cmd in self.commands:
+
             for token in cmd.tokens:
-                self.all_tokens += token.words
-        self.all_tokens = set(self.all_tokens)
+                all_tokens += token.words
+        all_tokens = set(all_tokens)
 
         # The 1st item in argv is the program name...ignore it
         self.argv = sys.argv[1:]
 
-        # Init all tokens in args to False
-        for x in self.all_tokens:
-            self.args[x] = False
+        # Init all tokens in args to None
+        for x in all_tokens:
+            self.args[x] = None
 
         candidates = []
         for cmd in self.commands:
@@ -317,18 +321,23 @@ class NetworkDocopt():
             cmd = candidates[0]
 
             if debug:
-                print "There is one candidate, options %s"  % cmd.option
+                print "There is one candidate:\n%s"  % cmd
 
             for token in cmd.tokens:
-                self.args[token.key_text] = token.value
-                if debug:
-                    print "args key: %s, value: %s" % (token.key_text, token.value)
+
+                # The key_text is only set if the token matched
+                if token.key_text:
+                    self.args[token.key_text] = token.value
+
+                    if debug:
+                        print "args key: %s, value: %s" % (token.key_text, token.value)
 
             self.match = True
 
             if cmd.option:
                 self.options = cmd.option
 
+            # If the user entered -h or --help print the docstring and exit
             if len(cmd.tokens) == 1:
                 token = cmd.tokens[0]
                 if token.key_text == '-h' or token.key_text == '--help':
@@ -337,6 +346,9 @@ class NetworkDocopt():
 
         else:
             print "\nERROR: ambiguous parse chain\n"
+
+    def get(self, keyword):
+        return self.args.get(keyword)
 
     def print_options(self):
         if self.options:
