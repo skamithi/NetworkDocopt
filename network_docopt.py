@@ -15,6 +15,7 @@ class Token():
         self.required = required
         self.key_text = None
         self.value = False
+        self.exact_match = False
 
     def __str__(self):
         return "REQUIRED: %s, KEY_TEXT: %s, VALUE: %s, WORDS: %s" % (self.required, self.key_text, self.value, self.words)
@@ -51,6 +52,7 @@ class Token():
                         ipv4_or_ipv6 = IPAddress(argv_text)
                         self.key_text = word
                         self.value = argv_text
+                        self.exact_match = True
                         return True
                     except:
                         pass
@@ -60,6 +62,7 @@ class Token():
                         ipv4_or_ipv6 = IPNetwork(argv_text)
                         self.key_text = word
                         self.value = argv_text
+                        self.exact_match = True
                         return True
                     except:
                         pass
@@ -69,12 +72,14 @@ class Token():
                     if argv_text in listdir('/sys/class/net/'):
                         self.key_text = word
                         self.value = argv_text
+                        self.exact_match = True
                         return True
 
                 elif word == '<major>' or word == '<minor>' or word == '<number>':
                     if argv_text.isdigit():
                         self.key_text = word
                         self.value = int(argv_text)
+                        self.exact_match = True
                         return True
 
                 # For all other <foo> inputs, only do basic sanity checking
@@ -89,6 +94,7 @@ class Token():
                     if not conflicts_with_keyword:
                         self.key_text = word
                         self.value = argv_text
+                        self.exact_match = True
                         return True
 
             # Keyword
@@ -96,6 +102,7 @@ class Token():
                 if argv_text == word:
                     self.key_text = word
                     self.value = True
+                    self.exact_match = True
                     return True
 
                 elif argv_text != '-' and argv_text != '--' and word.startswith(argv_text):
@@ -105,7 +112,9 @@ class Token():
 
         return False
 
+
 class CommandSequence():
+
     def __init__(self, string):
 
         self.option = []
@@ -169,7 +178,9 @@ class CommandSequence():
                 print "%-70s: %d argv words but we only have %d tokens. SCORE: 0" % (self.text, len_argv, len(self.tokens))
             return False
 
+        self.last_matching_token = None
         argv_index = 0
+
         for token in self.tokens:
             if argv_index < len_argv:
                 text_argv = argv[argv_index]
@@ -182,6 +193,7 @@ class CommandSequence():
                     argv_index += 1
                     self.score += 1
                     self.option = []
+                    self.last_matching_token = token
 
                 else:
                     if not argv_index:
@@ -198,6 +210,7 @@ class CommandSequence():
                     argv_index += 1
                     self.score += 1
                     self.option = []
+                    self.last_matching_token = token
                 else:
                     self.option.extend(token.options())
 
@@ -210,11 +223,12 @@ class CommandSequence():
             print "%-70s: MATCH" % (self.text)
         return True
 
-"""
-Heavily influenced by docopt but designed to be a little more like
-a Networking CLI with partial word acceptance, IPv4 sanity checking, etc
-"""
+
 class NetworkDocopt():
+    """
+    Heavily influenced by docopt but designed to be a little more like
+    a Networking CLI with partial word acceptance, IPv4 sanity checking, etc
+    """
 
     def __init__(self, docstring):
         self.args    = {}
@@ -312,8 +326,20 @@ class NetworkDocopt():
                 if score not in options_by_score:
                     options_by_score[score] = []
 
+                # Set the option choices to return for bash-completion
                 if cmd.option:
-                    options_by_score[score] += cmd.option
+
+                    # If the user entered the exact keyword then we should return the
+                    # options following that keyword.
+                    if not cmd.last_matching_token or cmd.last_matching_token.exact_match:
+                        options_by_score[score] += cmd.option
+
+                    # If they only entered part of the keyword ('sh' for 'show' for example)
+                    # then we should return 'show' so bash can tab complete it.
+                    else:
+                        if cmd.last_matching_token.key_text:
+                            options_by_score[score].append(cmd.last_matching_token.key_text)
+
                 scores[score].append(cmd)
 
             if high_score in scores and scores[high_score]:
