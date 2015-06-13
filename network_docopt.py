@@ -13,14 +13,12 @@ class Token():
         self.text = text
         self.words = text.split('|')
         self.required = required
-        self.key_text = text
+        self.key_text = None
         self.value = False
+        self.exact_match = False
 
     def __str__(self):
-        if self.required:
-            return '*' + self.text
-
-        return self.text
+        return "REQUIRED: %s, KEY_TEXT: %s, VALUE: %s, WORDS: %s" % (self.required, self.key_text, self.value, self.words)
 
     def options(self):
         results = []
@@ -39,7 +37,7 @@ class Token():
 
         return results
 
-    def matches(self, argv_text):
+    def matches(self, argv_text, all_tokens):
 
         if not argv_text:
             return False
@@ -54,6 +52,7 @@ class Token():
                         ipv4_or_ipv6 = IPAddress(argv_text)
                         self.key_text = word
                         self.value = argv_text
+                        self.exact_match = True
                         return True
                     except:
                         pass
@@ -63,6 +62,7 @@ class Token():
                         ipv4_or_ipv6 = IPNetwork(argv_text)
                         self.key_text = word
                         self.value = argv_text
+                        self.exact_match = True
                         return True
                     except:
                         pass
@@ -72,17 +72,29 @@ class Token():
                     if argv_text in listdir('/sys/class/net/'):
                         self.key_text = word
                         self.value = argv_text
+                        self.exact_match = True
                         return True
-
-                elif word == '<name>' or word == '<cleartext>':
-                    self.key_text = word
-                    self.value = argv_text
-                    return True
 
                 elif word == '<major>' or word == '<minor>' or word == '<number>':
                     if argv_text.isdigit():
                         self.key_text = word
                         self.value = int(argv_text)
+                        self.exact_match = True
+                        return True
+
+                # For all other <foo> inputs, only do basic sanity checking
+                else:
+                    conflicts_with_keyword = False
+
+                    for x in all_tokens:
+                        if x.startswith(argv_text):
+                            conflicts_with_keyword = True
+                            break
+
+                    if not conflicts_with_keyword:
+                        self.key_text = word
+                        self.value = argv_text
+                        self.exact_match = True
                         return True
 
             # Keyword
@@ -90,16 +102,19 @@ class Token():
                 if argv_text == word:
                     self.key_text = word
                     self.value = True
+                    self.exact_match = True
                     return True
 
-                elif word.startswith(argv_text):
+                elif argv_text != '-' and argv_text != '--' and word.startswith(argv_text):
                     self.key_text = word
                     self.value = True
                     return True
 
         return False
 
+
 class CommandSequence():
+
     def __init__(self, string):
 
         self.option = []
@@ -149,10 +164,11 @@ class CommandSequence():
     def __str__(self):
         text = []
         index = 0
+
         for token in self.tokens:
             text.append('%d: %s' % (index, token))
             index += 1
-        return '\n'.join(text)
+        return self.text + '\n' +  '\n'.join(text)
 
     def argv_matches_tokens(self, argv):
         len_argv = len(argv)
@@ -162,7 +178,9 @@ class CommandSequence():
                 print "%-70s: %d argv words but we only have %d tokens. SCORE: 0" % (self.text, len_argv, len(self.tokens))
             return False
 
+        self.last_matching_token = None
         argv_index = 0
+
         for token in self.tokens:
             if argv_index < len_argv:
                 text_argv = argv[argv_index]
@@ -171,10 +189,11 @@ class CommandSequence():
 
             if token.required:
 
-                if token.matches(text_argv):
+                if token.matches(text_argv, self.all_tokens):
                     argv_index += 1
                     self.score += 1
                     self.option = []
+                    self.last_matching_token = token
 
                 else:
                     if not argv_index:
@@ -187,10 +206,11 @@ class CommandSequence():
                     return False
 
             else:
-                if token.matches(text_argv):
+                if token.matches(text_argv, self.all_tokens):
                     argv_index += 1
                     self.score += 1
                     self.option = []
+                    self.last_matching_token = token
                 else:
                     self.option.extend(token.options())
 
@@ -203,11 +223,13 @@ class CommandSequence():
             print "%-70s: MATCH" % (self.text)
         return True
 
-"""
-Heavily influenced by docopt but designed to be a little more like
-a Networking CLI with partial word acceptance, IPv4 sanity checking, etc
-"""
+
 class NetworkDocopt():
+    """
+    Heavily influenced by docopt but designed to be a little more like
+    a Networking CLI with partial word acceptance, IPv4 sanity checking, etc
+    """
+
     def __init__(self, docstring):
         self.args    = {}
         self.match   = False
@@ -222,14 +244,18 @@ class NetworkDocopt():
         state = None
         self.commands = []
         found_help_option = False
+
         for line in docstring.split('\n'):
             if line.startswith('Usage'):
                 state = 'Usage'
                 continue
+
             elif line.startswith('Help'):
                 break
+
             elif line.startswith('Options'):
                 break
+
             elif line == '':
                 continue
 
@@ -257,18 +283,21 @@ class NetworkDocopt():
 
         # Now loop over all of the CommandSequence objects and build a list
         # of every kind of token in the doc string
-        self.all_tokens = []
+        all_tokens = []
         for cmd in self.commands:
             for token in cmd.tokens:
-                self.all_tokens += token.words
-        self.all_tokens = set(self.all_tokens)
+                all_tokens += token.words
+        all_tokens = set(all_tokens)
+
+        for cmd in self.commands:
+            cmd.all_tokens = all_tokens
 
         # The 1st item in argv is the program name...ignore it
         self.argv = sys.argv[1:]
 
-        # Init all tokens in args to False
-        for x in self.all_tokens:
-            self.args[x] = False
+        # Init all tokens in args to None
+        for x in all_tokens:
+            self.args[x] = None
 
         candidates = []
         for cmd in self.commands:
@@ -297,8 +326,20 @@ class NetworkDocopt():
                 if score not in options_by_score:
                     options_by_score[score] = []
 
+                # Set the option choices to return for bash-completion
                 if cmd.option:
-                    options_by_score[score] += cmd.option
+
+                    # If the user entered the exact keyword then we should return the
+                    # options following that keyword.
+                    if not cmd.last_matching_token or cmd.last_matching_token.exact_match:
+                        options_by_score[score] += cmd.option
+
+                    # If they only entered part of the keyword ('sh' for 'show' for example)
+                    # then we should return 'show' so bash can tab complete it.
+                    else:
+                        if cmd.last_matching_token.key_text:
+                            options_by_score[score].append(cmd.last_matching_token.key_text)
+
                 scores[score].append(cmd)
 
             if high_score in scores and scores[high_score]:
@@ -317,18 +358,23 @@ class NetworkDocopt():
             cmd = candidates[0]
 
             if debug:
-                print "There is one candidate, options %s"  % cmd.option
+                print "There is one candidate:\n%s"  % cmd
 
             for token in cmd.tokens:
-                self.args[token.key_text] = token.value
-                if debug:
-                    print "args key: %s, value: %s" % (token.key_text, token.value)
+
+                # The key_text is only set if the token matched
+                if token.key_text:
+                    self.args[token.key_text] = token.value
+
+                    if debug:
+                        print "args key: %s, value: %s" % (token.key_text, token.value)
 
             self.match = True
 
             if cmd.option:
                 self.options = cmd.option
 
+            # If the user entered -h or --help print the docstring and exit
             if len(cmd.tokens) == 1:
                 token = cmd.tokens[0]
                 if token.key_text == '-h' or token.key_text == '--help':
@@ -336,7 +382,13 @@ class NetworkDocopt():
                     exit(0)
 
         else:
-            print "\nERROR: ambiguous parse chain\n"
+            print "\nERROR: ambiguous parse chain...matches:"
+
+            for cmd in candidates:
+                print "%s\n" % cmd
+
+    def get(self, keyword):
+        return self.args.get(keyword)
 
     def print_options(self):
         if self.options:

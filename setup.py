@@ -7,7 +7,7 @@ except ImportError:
     from setuptools import setup
 setup(
     name='network-docopt',
-    version='1.0',
+    version='0.1.0',
     description="Network Docopt",
     url="https://github.com/dwalton76/NetworkDocopt",
     author='Daniel Walton',
