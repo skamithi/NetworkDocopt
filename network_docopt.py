@@ -277,7 +277,6 @@ class NetworkDocopt():
             line = '%s (-h|--help)' % self.program
             self.commands.append(CommandSequence(line))
 
-<<<<<<< HEAD
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
             for cmd in self.commands:
                 logging.debug('CMD TEXT: %s' % cmd.text)
@@ -285,8 +284,6 @@ class NetworkDocopt():
                 logging.debug(cmd)
                 logging.debug('')
 
-=======
->>>>>>> 89b77ea7b78c3d01d5a9c2a5734301cc580e63b1
         # Now loop over all of the CommandSequence objects and build a list
         # of every kind of token in the doc string
         all_tokens = []
@@ -313,11 +310,8 @@ class NetworkDocopt():
         # This is a bad thing
         if not candidates:
 
-<<<<<<< HEAD
             logging.debug("There are no candidates")
 
-=======
->>>>>>> 89b77ea7b78c3d01d5a9c2a5734301cc580e63b1
             high_score = -1
             scores = {}
             options_by_score = {}
@@ -365,23 +359,16 @@ class NetworkDocopt():
         elif len(candidates) == 1:
             cmd = candidates[0]
 
-<<<<<<< HEAD
             logging.debug("There is one candidate:\n%s"  % cmd)
 
-=======
->>>>>>> 89b77ea7b78c3d01d5a9c2a5734301cc580e63b1
             for token in cmd.tokens:
 
                 # The key_text is only set if the token matched
                 if token.key_text:
                     self.args[token.key_text] = token.value
-
-<<<<<<< HEAD
                     logging.debug("args key: %s, value: %s" % (token.key_text,
                         token.value))
 
-=======
->>>>>>> 89b77ea7b78c3d01d5a9c2a5734301cc580e63b1
             self.match = True
 
             if cmd.option:
