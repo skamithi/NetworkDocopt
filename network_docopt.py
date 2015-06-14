@@ -177,8 +177,8 @@ class CommandSequence():
         len_argv = len(argv)
 
         if len_argv > len(self.tokens):
-            logging.debug("%-70s: %d argv words but we only have %d tokens.
-                    SCORE: 0" % (self.text, len_argv, len(self.tokens)))
+            logging.debug("%-70s: %d argv words but we only have %d tokens. SCORE: 0" % (
+                self.text, len_argv, len(self.tokens)))
             return False
 
         self.last_matching_token = None
