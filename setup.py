@@ -1,4 +1,11 @@
 # pylint: disable=c0111
+
+def install_requires():
+    _install_requires=''
+    if sys.version_info <=(3, 0):
+        _install_requires = ['ipaddr']
+    return _install_requires
+
 try:
     from setuptools import setup
 except ImportError:
@@ -13,12 +20,7 @@ setup(
     author='Daniel Walton',
     author_email='dwalton@cumulusnetworks.com',
     py_modules=['network_docopt'],
-#   breaks when loaded on py3 system
-#   but is required for py2 system.
-#   TODO: figure out how to resolve this cleanly
-    install_requires=[
-        'ipaddr'
-    ],
+    install_requires=install_requires(),
     scripts=['bin/network-docopt-example'],
     data_files=[('usr/share/bash-completion/completions',
                  ['completions/network-docopt-example'])]
