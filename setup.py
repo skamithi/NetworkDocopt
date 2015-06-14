@@ -16,9 +16,9 @@ setup(
 #   breaks when loaded on py3 system
 #   but is required for py2 system.
 #   TODO: figure out how to resolve this cleanly
-#    install_requires=[
-#        'ipaddr'
-#    ],
+    install_requires=[
+        'ipaddr'
+    ],
     scripts=['bin/network-docopt-example'],
     data_files=[('usr/share/bash-completion/completions',
                  ['completions/network-docopt-example'])]
