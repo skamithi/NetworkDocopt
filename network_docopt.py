@@ -1,11 +1,14 @@
-
-from ipaddr import IPAddress, IPv4Address, IPv6Address
-from ipaddr import IPNetwork, IPv4Network, IPv6Network
+try:
+    import ipaddress
+except ImportError:
+    import ipaddr as ipaddress
 from re import match as re_match, search as re_search
 from os import listdir
 import sys
+import logging
 
-debug = False
+""" change to logging.DEBUG when running debugs"""
+logging.basicConfig(level=logging.WARN)
 
 class Token():
 
@@ -49,7 +52,7 @@ class Token():
 
                 if word == '<ip>' or word == '<source-ip>':
                     try:
-                        ipv4_or_ipv6 = IPAddress(argv_text)
+                        ipv4_or_ipv6 = ipaddress.IPAddress(argv_text)
                         self.key_text = word
                         self.value = argv_text
                         self.exact_match = True
@@ -59,7 +62,7 @@ class Token():
 
                 elif word == '<ip/mask>':
                     try:
-                        ipv4_or_ipv6 = IPNetwork(argv_text)
+                        ipv4_or_ipv6 = ipaddress.IPNetwork(argv_text)
                         self.key_text = word
                         self.value = argv_text
                         self.exact_match = True
@@ -174,8 +177,8 @@ class CommandSequence():
         len_argv = len(argv)
 
         if len_argv > len(self.tokens):
-            if debug:
-                print "%-70s: %d argv words but we only have %d tokens. SCORE: 0" % (self.text, len_argv, len(self.tokens))
+            logging.debug("%-70s: %d argv words but we only have %d tokens.
+                    SCORE: 0" % (self.text, len_argv, len(self.tokens)))
             return False
 
         self.last_matching_token = None
@@ -200,9 +203,9 @@ class CommandSequence():
                         self.score -= 1
 
                     self.option.extend(token.options())
-                    if debug:
-                        print "%-70s: Required token '%s' failed to match vs. argv[%d] '%s'. SCORE: %d" % \
-                            (self.text, token.text, argv_index, text_argv, self.score)
+                    logging.debug("%-70s: Required token '%s' failed to match vs. argv[%d] '%s'. SCORE: %d" % \
+                            (self.text, token.text, argv_index, text_argv,
+                                self.score))
                     return False
 
             else:
@@ -215,12 +218,12 @@ class CommandSequence():
                     self.option.extend(token.options())
 
         if self.score != len_argv:
-            if debug:
-                print "%-70s: %d/%d argv words matches. SCORE: %d" % (self.text, self.score, len_argv, self.score)
+            logging.debug(
+                    "%-70s: %d/%d argv words matches. SCORE: %d" % (self.text,
+                        self.score, len_argv, self.score))
             return False
 
-        if debug:
-            print "%-70s: MATCH" % (self.text)
+        logging.debug("%-70s: MATCH" % (self.text))
         return True
 
 
@@ -274,12 +277,12 @@ class NetworkDocopt():
             line = '%s (-h|--help)' % self.program
             self.commands.append(CommandSequence(line))
 
-        if debug:
+        if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
             for cmd in self.commands:
-                print 'CMD TEXT: %s' % cmd.text
-                print 'CMD TOKENS'
-                print cmd
-                print ''
+                logging.debug('CMD TEXT: %s' % cmd.text)
+                logging.debug('CMD TOKENS')
+                logging.debug(cmd)
+                logging.debug('')
 
         # Now loop over all of the CommandSequence objects and build a list
         # of every kind of token in the doc string
@@ -307,8 +310,7 @@ class NetworkDocopt():
         # This is a bad thing
         if not candidates:
 
-            if debug:
-                print "There are no candidates"
+            logging.debug("There are no candidates")
 
             high_score = -1
             scores = {}
@@ -357,8 +359,7 @@ class NetworkDocopt():
         elif len(candidates) == 1:
             cmd = candidates[0]
 
-            if debug:
-                print "There is one candidate:\n%s"  % cmd
+            logging.debug("There is one candidate:\n%s"  % cmd)
 
             for token in cmd.tokens:
 
@@ -366,8 +367,8 @@ class NetworkDocopt():
                 if token.key_text:
                     self.args[token.key_text] = token.value
 
-                    if debug:
-                        print "args key: %s, value: %s" % (token.key_text, token.value)
+                    logging.debug("args key: %s, value: %s" % (token.key_text,
+                        token.value))
 
             self.match = True
 
@@ -382,10 +383,10 @@ class NetworkDocopt():
                     exit(0)
 
         else:
-            print "\nERROR: ambiguous parse chain...matches:"
+            print("\nERROR: ambiguous parse chain...matches:")
 
             for cmd in candidates:
-                print "%s\n" % cmd
+                print("%s\n" % cmd)
 
     def get(self, keyword):
         return self.args.get(keyword)
