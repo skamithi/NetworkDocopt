@@ -1,4 +1,11 @@
 # pylint: disable=c0111
+try:
+    from setuptools import setup
+except ImportError:
+    import ez_setup
+    ez_setup.use_setuptools()
+    from setuptools import setup
+import sys
 
 def install_requires():
     _install_requires=''
@@ -6,12 +13,7 @@ def install_requires():
         _install_requires = ['ipaddr']
     return _install_requires
 
-try:
-    from setuptools import setup
-except ImportError:
-    import ez_setup
-    ez_setup.use_setuptools()
-    from setuptools import setup
+
 setup(
     name='network-docopt',
     version='0.1.1',
